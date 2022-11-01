@@ -3,9 +3,7 @@ const admin = require("firebase-admin");
 const fetch = require("node-fetch");
 var cron = require('node-cron');
 var serviceAccount = require("./serviceAccountKey.json");
-const express = require('express');
 const PORT = process.env.PORT || 8081
-const app = express();
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
