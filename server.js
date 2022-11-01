@@ -147,6 +147,7 @@ async function getSources() {
 }
 
 cron.schedule('0 */30 * * *', async () => {
+    console.log("RUNNING");
     await getSources();
 
     let topicsSnap = await db.collection("topics").get();
