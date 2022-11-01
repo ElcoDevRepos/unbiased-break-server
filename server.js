@@ -162,7 +162,7 @@ async function start() {
 }
 
 function init() {
-    Promise.all(start()).then(() => process.exit());
+    Promise.all([start()]).then(() => process.exit());
 }
 
 init();
