@@ -146,7 +146,7 @@ async function getSources() {
     sources.push(...leftSources, ...middleSources, ...rightSources);
 }
 
-cron.schedule('0 */30 * * *', async () => {
+async function start() {
     console.log("RUNNING");
     await getSources();
 
@@ -159,4 +159,6 @@ cron.schedule('0 */30 * * *', async () => {
         await doFeed(topics[i])
     }
     return
-});
+}
+
+start();
