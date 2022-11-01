@@ -146,7 +146,7 @@ async function getSources() {
     sources.push(...leftSources, ...middleSources, ...rightSources);
 }
 
-cron.schedule('0 */1 * * *', async () => {
+cron.schedule('0 */30 * * *', async () => {
     await getSources();
 
     let topicsSnap = await db.collection("topics").get();
