@@ -25,19 +25,16 @@ const options = {
 
 function getProperCollection(a) {
     let rightContains = rightSources.some(e => {
-        console.log(e);
         if (a.link.includes(e)) return true;
         return false;
     })
 
     let middleContains = middleSources.some(e => {
-        console.log(e);
         if (a.link.includes(e)) return true;
         return false;
     })
 
     let leftContains = leftSources.some(e => {
-        console.log(e);
         if (a.link.includes(e)) return true;
         return false;
     })
@@ -51,10 +48,8 @@ function getProperCollection(a) {
 async function getContent(json) {
     try {
         baseURL = "https://url-content-extractor.herokuapp.com/";
-
         let response = await fetch(baseURL + "content?url=" + json.link, options);
         let respJson = await response.json();
-
         return respJson;
     } catch (error) {
         return { status: 500 };
@@ -70,6 +65,7 @@ async function doFeed(searchTopics, flag) {
             searches.push({ topic: str + " " + searchTopics.topic, id: searchTopics.id });
         });
 
+        console.log(searches.length);
         let searchTopicsResp = [];
         for (let i = 0; i < searches.length; i++) {
             try {
@@ -79,13 +75,14 @@ async function doFeed(searchTopics, flag) {
             }
         }
         let promises = [];
-
+        console.log(searchTopicsResp.length);
         let final = [];
         for (let i = 0; i < searchTopicsResp.length; i++) {
             let s = searchTopicsResp[i];
             let aList = s.article;
             if (aList.length > 0) {
                 for (let j = 0; j < aList.length; j++) {
+                    console.log("LOOP");
                     let a = aList[j];
                     try {
                         let art = await getContent(a);
@@ -99,11 +96,14 @@ async function doFeed(searchTopics, flag) {
 
             }
         }
+        console.log("HI");
+        console.log(final.length);
         for (let i = 0; i < final.length; i++) {
             let a = final[i];
             let collectionName = getProperCollection(a);
 
             if (collectionName === 'No Source Found') {
+                console.log(a);
                 //console.log(collectionName + ": " + a.link);
             } else {
                 let collection = db.collection(collectionName);
@@ -128,6 +128,7 @@ async function doSearch(query) {
         let json = await response.json();
         return json;
     } catch (error) {
+        console.log(error);
         return { status: 400 }
     }
 }
@@ -146,11 +147,54 @@ async function getSources() {
     sources.push(...leftSources, ...middleSources, ...rightSources);
 }
 
+async function doTrending(json) {
+    try {
+        let articles = json.articles;
+        let final = [];
+        for (let i = 0; i < articles.length; i++) {
+            try {
+                let a = articles[i];
+                let collection = db.collection("trending-articles");
+                let query = collection.where("link", "==", a.link);
+                let docs = await query.get();
+
+                let art = await getContent(a);
+                if (art.status === 200) {
+                    final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, deleted: false });
+                }
+            } catch (error) {
+                console.log(error)
+            }
+
+        }
+        for (let i = 0; i < final.length; i++) {
+            try {
+                let a = final[i];
+                let collection = db.collection("trending-articles");
+                let query = collection.where("link", "==", a.link);
+                let docs = await query.get();
+                console.log(docs.empty, a);
+                if (docs.empty) {
+                    db.collection("trending-articles").add(a);
+                }
+            } catch (error) {
+                console.log(error)
+            }
+
+        }
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+
 async function start() {
+    /*
     console.log("RUNNING");
     await getSources();
 
     let topicsSnap = await db.collection("topics").get();
+
     let topics = [];
     topicsSnap.forEach((top) => {
         topics.push({ topic: top.data().name, id: top.data().id });
@@ -158,6 +202,11 @@ async function start() {
     for (let i = 0; i < topics.length; i++) {
         await doFeed(topics[i])
     }
+*/
+    let response = await fetch(baseURL + "trending", options);
+    let json = await response.json();
+        await doTrending(json);
+    
     return
 }
 
