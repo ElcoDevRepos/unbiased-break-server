@@ -189,7 +189,6 @@ async function doTrending(json) {
 }
 
 async function start() {
-    /*
     console.log("RUNNING");
     await getSources();
 
@@ -202,7 +201,7 @@ async function start() {
     for (let i = 0; i < topics.length; i++) {
         await doFeed(topics[i])
     }
-*/
+
     let response = await fetch(baseURL + "trending", options);
     let json = await response.json();
         await doTrending(json);
