@@ -65,7 +65,6 @@ async function doFeed(searchTopics, flag) {
             searches.push({ topic: str + " " + searchTopics.topic, id: searchTopics.id });
         });
 
-        console.log(searches.length);
         let searchTopicsResp = [];
         for (let i = 0; i < searches.length; i++) {
             try {
@@ -75,14 +74,12 @@ async function doFeed(searchTopics, flag) {
             }
         }
         let promises = [];
-        console.log(searchTopicsResp.length);
         let final = [];
         for (let i = 0; i < searchTopicsResp.length; i++) {
             let s = searchTopicsResp[i];
             let aList = s.article;
             if (aList.length > 0) {
                 for (let j = 0; j < aList.length; j++) {
-                    console.log("LOOP");
                     let a = aList[j];
                     try {
                         let art = await getContent(a);
@@ -96,14 +93,12 @@ async function doFeed(searchTopics, flag) {
 
             }
         }
-        console.log("HI");
-        console.log(final.length);
+
         for (let i = 0; i < final.length; i++) {
             let a = final[i];
             let collectionName = getProperCollection(a);
 
             if (collectionName === 'No Source Found') {
-                console.log(a);
                 //console.log(collectionName + ": " + a.link);
             } else {
                 let collection = db.collection(collectionName);
@@ -173,7 +168,6 @@ async function doTrending(json) {
                 let collection = db.collection("trending-articles");
                 let query = collection.where("link", "==", a.link);
                 let docs = await query.get();
-                console.log(docs.empty, a);
                 if (docs.empty) {
                     db.collection("trending-articles").add(a);
                 }
