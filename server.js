@@ -84,7 +84,7 @@ async function doFeed(searchTopics, flag) {
                     try {
                         let art = await getContent(a);
                         if (art.status === 200) {
-                            final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, topic: s.topic, deleted: false });
+                            final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, topic: s.topic, deleted: false, timestamp: admin.firestore.Timestamp.now(), related_articles: [] });
                         }
                     } catch (error) {
                         console.log(error);
@@ -148,14 +148,11 @@ async function doTrending(json) {
         let final = [];
         for (let i = 0; i < articles.length; i++) {
             try {
-                let a = articles[i];
-                let collection = db.collection("trending-articles");
-                let query = collection.where("link", "==", a.link);
-                let docs = await query.get();
+                let a = articles[i];               
 
                 let art = await getContent(a);
                 if (art.status === 200) {
-                    final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, deleted: false });
+                    final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, deleted: false, timestamp: admin.firestore.Timestamp.now(), related_articles: []});
                 }
             } catch (error) {
                 console.log(error)
