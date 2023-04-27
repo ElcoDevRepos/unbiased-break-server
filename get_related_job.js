@@ -184,9 +184,7 @@ async function getRelatedArticles () {
 }
 
 function init() {
-    cron.schedule('0 */6 * * *', () => {
-        getRelatedArticles();
-    });
+    Promise.all([getRelatedArticles()]).then(() => process.exit());
 }
 
 init();
