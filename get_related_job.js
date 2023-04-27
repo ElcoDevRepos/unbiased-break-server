@@ -23,13 +23,13 @@ const options = {
 async function getRelatedArticles () {
     console.log("RUNNING...");
 
-    const timestamp24h = new Date(Date.now() - 4 * 60 * 60 * 1000);     //Timestamp for 24h ago
-    const minimumSimilarity = 0.7;                                      //Minimum value of similarity to determine if two articles are similar
+    const timestampFrame = new Date(Date.now() - 4 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
+    const minimumSimilarity = 0.7;                                        //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
-    const queryLeftArticles = await db.collection("left-articles").where("timestamp", ">=", timestamp24h).get();
-    const queryMiddleArticles = await db.collection("middle-articles").where("timestamp", ">=", timestamp24h).get();
-    const queryRightArticles = await db.collection("right-articles").where("timestamp", ">=", timestamp24h).get();
+    const queryLeftArticles = await db.collection("left-articles").where("timestamp", ">=", timestampFrame).get();
+    const queryMiddleArticles = await db.collection("middle-articles").where("timestamp", ">=", timestampFrame).get();
+    const queryRightArticles = await db.collection("right-articles").where("timestamp", ">=", timestampFrame).get();
 
     const promises = [];
 
@@ -184,7 +184,7 @@ async function getRelatedArticles () {
 }
 
 function init() {
-    cron.schedule('0 */12 * * *', () => {
+    cron.schedule('0 */4 * * *', () => {
         getRelatedArticles();
     });
 }
