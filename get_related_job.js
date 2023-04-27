@@ -23,7 +23,7 @@ const options = {
 async function getRelatedArticles () {
     console.log("RUNNING...");
 
-    const timestampFrame = new Date(Date.now() - 4 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
+    const timestampFrame = new Date(Date.now() - 6 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
     const minimumSimilarity = 0.7;                                        //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
@@ -184,7 +184,7 @@ async function getRelatedArticles () {
 }
 
 function init() {
-    cron.schedule('0 */4 * * *', () => {
+    cron.schedule('0 */6 * * *', () => {
         getRelatedArticles();
     });
 }
