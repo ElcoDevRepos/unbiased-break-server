@@ -35,7 +35,6 @@ async function getRelatedArticles () {
 
     //Find related articles for all left-articles
     queryLeftArticles.forEach((doc) => {
-        const topic = doc.data().topic;         //Grabs reference for the document topic
         const textBody = doc.data().textBody;   //Grabs reference for the document text body 
         let relatedArticles = [];               //A place to temporary store the related articles
 
@@ -43,8 +42,8 @@ async function getRelatedArticles () {
         queryMiddleArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
                 //Run a similarity check on the two bodies of text
                 const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
@@ -60,8 +59,8 @@ async function getRelatedArticles () {
         queryRightArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+           //Make sure it's not deleted
+           if(data.deleted == false) {
                 
                 //Run a similarity check on the two bodies of text
                 const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
@@ -84,7 +83,6 @@ async function getRelatedArticles () {
 
     //Find related articles for all middle-articles
     queryMiddleArticles.forEach((doc) => {
-        const topic = doc.data().topic;         //Grabs reference for the document topic
         const textBody = doc.data().textBody;   //Grabs reference for the document text body 
         let relatedArticles = [];               //A place to temporary store the related articles
 
@@ -92,8 +90,8 @@ async function getRelatedArticles () {
         queryLeftArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
                 //Run a similarity check on the two bodies of text
                 const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
@@ -109,8 +107,8 @@ async function getRelatedArticles () {
         queryRightArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
                 //Run a similarity check on the two bodies of text
                 const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
@@ -133,7 +131,6 @@ async function getRelatedArticles () {
 
     //Find related articles for all right-articles
     queryRightArticles.forEach((doc) => {
-        const topic = doc.data().topic;         //Grabs reference for the document topic
         const textBody = doc.data().textBody;   //Grabs reference for the document text body 
         let relatedArticles = [];               //A place to temporary store the related articles
 
@@ -141,8 +138,8 @@ async function getRelatedArticles () {
         queryLeftArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
                 //Run a similarity check on the two bodies of text
                 const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
@@ -158,8 +155,8 @@ async function getRelatedArticles () {
         queryMiddleArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
                 //Run a similarity check on the two bodies of text
                 const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
