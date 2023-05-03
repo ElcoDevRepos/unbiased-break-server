@@ -52,15 +52,14 @@ async function getRelatedArticles () {
             }
         });
 
-        const updatePromise = doc.ref.set({
+        const updatePromise = doc.ref.update({
             "related_articles": relatedArticles
-        }, { merge: true })
-        .then(() => {
-            console.log('Field added successfully!');
         })
+        .then(() => { })
         .catch((error) => {
-            console.error('Error adding field: ', error);
+            console.error('Error updating field: ', error);
         });
+        
 
         promises.push(updatePromise);
     });
