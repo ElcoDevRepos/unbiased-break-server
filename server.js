@@ -148,11 +148,11 @@ async function doTrending(json) {
         let final = [];
         for (let i = 0; i < articles.length; i++) {
             try {
-                let a = articles[i];               
+                let a = articles[i];
 
                 let art = await getContent(a);
                 if (art.status === 200) {
-                    final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, deleted: false, timestamp: admin.firestore.Timestamp.now(), related_articles: []});
+                    final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, deleted: false, timestamp: admin.firestore.Timestamp.now(), related_articles: [] });
                 }
             } catch (error) {
                 console.log(error)
@@ -182,7 +182,9 @@ async function doTrending(json) {
 async function start() {
     console.log("RUNNING");
     await getSources();
-
+    let response = await fetch(baseURL + "trending", options);
+    let json = await response.json();
+    await doTrending(json);
     let topicsSnap = await db.collection("topics").get();
 
     let topics = [];
@@ -193,10 +195,8 @@ async function start() {
         await doFeed(topics[i])
     }
 
-    let response = await fetch(baseURL + "trending", options);
-    let json = await response.json();
-        await doTrending(json);
-    
+
+
     return
 }
 
