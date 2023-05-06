@@ -24,7 +24,7 @@ async function getRelatedArticles () {
     console.log("RUNNING...");
 
     const timestampFrame = new Date(Date.now() - 6 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
-    const minimumSimilarity = 0.7;                                        //Minimum value of similarity to determine if two articles are similar
+    const minimumSimilarity = 0.25;                                       //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
     const queryLeftArticles = await db.collection("left-articles").where("timestamp", ">=", timestampFrame).get();
@@ -35,19 +35,18 @@ async function getRelatedArticles () {
 
     //Find related articles for all left-articles
     queryLeftArticles.forEach((doc) => {
-        const topic = doc.data().topic;         //Grabs reference for the document topic
-        const textBody = doc.data().textBody;   //Grabs reference for the document text body 
+        const title = doc.data().title;         //Grabs reference for the document title
         let relatedArticles = [];               //A place to temporary store the related articles
 
         //Go through all the middle articles to find related ones
         queryMiddleArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
-                //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
+                //Run a similarity check on the two titles
+                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -60,11 +59,11 @@ async function getRelatedArticles () {
         queryRightArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+           //Make sure it's not deleted
+           if(data.deleted == false) {
                 
-                //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
+                //Run a similarity check on the two titles
+                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -84,19 +83,18 @@ async function getRelatedArticles () {
 
     //Find related articles for all middle-articles
     queryMiddleArticles.forEach((doc) => {
-        const topic = doc.data().topic;         //Grabs reference for the document topic
-        const textBody = doc.data().textBody;   //Grabs reference for the document text body 
+        const title = doc.data().title;         //Grabs reference for the document title
         let relatedArticles = [];               //A place to temporary store the related articles
 
         //Go through all the middle articles to find related ones
         queryLeftArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
-                //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
+                //Run a similarity check on the two titles
+                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -109,11 +107,11 @@ async function getRelatedArticles () {
         queryRightArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
-                //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
+                //Run a similarity check on the two titles
+                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -133,19 +131,18 @@ async function getRelatedArticles () {
 
     //Find related articles for all right-articles
     queryRightArticles.forEach((doc) => {
-        const topic = doc.data().topic;         //Grabs reference for the document topic
-        const textBody = doc.data().textBody;   //Grabs reference for the document text body 
+        const title = doc.data().title;         //Grabs reference for the document title 
         let relatedArticles = [];               //A place to temporary store the related articles
 
         //Go through all the middle articles to find related ones
         queryLeftArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
-                //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
+                //Run a similarity check on the two titles
+                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -158,11 +155,11 @@ async function getRelatedArticles () {
         queryMiddleArticles.forEach((d) => {
             const data = d.data();
 
-            //Make sure topic matches and it's not deleted
-            if(data.topic == topic && data.deleted == false) {
+            //Make sure it's not deleted
+            if(data.deleted == false) {
                 
-                //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
+                //Run a similarity check on the two titles
+                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
