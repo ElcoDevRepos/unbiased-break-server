@@ -102,8 +102,10 @@ async function doFeed(searchTopics, flag) {
                 //console.log(collectionName + ": " + a.link);
             } else {
                 let collection = db.collection(collectionName);
-                let query = collection.where("link", "==", a.link);
-                let docs = await query.get();
+                let linkQuery = collection.where("link", "==", a.link);
+                let titleQuery = collection.where("title", "==", a.title);
+                let combinedQuery = linkQuery || titleQuery;
+                let docs = await combinedQuery.get();
 
                 if (docs.empty) {
                     await db.collection(collectionName).add(a);
@@ -163,8 +165,10 @@ async function doTrending(json) {
             try {
                 let a = final[i];
                 let collection = db.collection("trending-articles");
-                let query = collection.where("link", "==", a.link);
-                let docs = await query.get();
+                let linkQuery = collection.where("link", "==", a.link);
+                let titleQuery = collection.where("title", "==", a.title);
+                let combinedQuery = linkQuery || titleQuery;
+                let docs = await combinedQuery.get();
                 if (docs.empty) {
                     db.collection("trending-articles").add(a);
                 }
