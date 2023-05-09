@@ -23,7 +23,7 @@ async function getRelatedArticles () {
     console.log("RUNNING...");
 
     const timestampFrame = new Date(Date.now() - 48 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
-    const minimumSimilarity = 0.7;                                         //Minimum value of similarity to determine if two articles are similar
+    const minimumSimilarity = 0.35;                                         //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
     const queryTrendingArticles = await db.collection("trending-articles").where("date", ">=", timestampFrame).get();
@@ -33,7 +33,7 @@ async function getRelatedArticles () {
     //Go through all queried articles
     queryTrendingArticles.forEach((doc) => {
         const id = doc.data().id;
-        const textBody = doc.data().textBody;   //Grabs reference for the document text body 
+        const title = doc.data().title;   //Grabs reference for the document text body 
         let relatedArticles = [];               //A place to temporary store the related articles
 
         queryTrendingArticles.forEach((d) => {
@@ -43,17 +43,25 @@ async function getRelatedArticles () {
             if(data.id != id && data.deleted == false) {
                 
                 //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(textBody, data.textBody);
+                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
-                    relatedArticles.push(d.id);   //Add the article to the related articles
+                    
+                    //Add the article and its similarity score to the related articles
+                    relatedArticles.push({id: d.id, similarity: similarity});
                 }
             }
         });
 
+        //Sort the related articles by similarity in descending order
+        relatedArticles.sort((a, b) => b.similarity - a.similarity);
+
+        //Create a new array with only the article IDs
+        const relatedArticleIds = relatedArticles.map((article) => article.id);
+
         const updatePromise = doc.ref.update({
-            "related_articles": relatedArticles
+            "related_articles": relatedArticlesIds
         })
         .then(() => { })
         .catch((error) => {
