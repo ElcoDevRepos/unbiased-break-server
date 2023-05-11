@@ -61,7 +61,7 @@ async function getRelatedArticles () {
         const relatedArticleIds = relatedArticles.map((article) => article.id);
 
         const updatePromise = doc.ref.update({
-            "related_articles": relatedArticlesIds
+            "related_articles": relatedArticleIds
         })
         .then(() => { })
         .catch((error) => {
