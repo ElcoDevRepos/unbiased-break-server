@@ -23,7 +23,7 @@ async function getRelatedArticles () {
     console.log("RUNNING...");
 
     const timestampFrame = new Date(Date.now() - 48 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
-    const minimumSimilarity = 0.35;                                         //Minimum value of similarity to determine if two articles are similar
+    const minimumSimilarity = 0.55;                                         //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
     const queryTrendingArticles = await db.collection("trending-articles").where("date", ">=", timestampFrame).get();
