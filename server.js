@@ -14,6 +14,45 @@ let middleSources = [];
 let rightSources = [];
 let sources = [];
 
+let categories = [
+    {
+        topic: 'World',
+        id: 'world'
+    }, 
+    {
+        topic: 'United States',
+        id: 'united-states'
+    }, 
+    {
+        topic: 'Politics',
+        id: 'politics'
+    }, 
+    {
+        topic: 'Economy',
+        id: 'economy'
+    }, 
+    {
+        topic: 'Business',
+        id: 'business'
+    }, 
+    {
+        topic: 'Tech',
+        id: 'tech'
+    }, 
+    {
+        topic: 'Markets',
+        id: 'markets'
+    }, 
+    {
+        topic: 'Opinion',
+        id: 'opinion'
+    }, 
+    {
+        topic: 'Sports',
+        id: 'sports'
+    }
+];
+
 let baseURL = "https://url-content-extractor.p.rapidapi.com/";
 const options = {
     method: "GET",
@@ -119,8 +158,60 @@ async function doFeed(searchTopics, flag) {
 
 }
 
+async function doCategories(categories) {
+    return new Promise(async (resolve, reject) => {
+
+        let searchTopicsResp = [];
+        for (let i = 0; i < categories.length; i++) {
+            try {
+                searchTopicsResp.push({ article: await doSearch(categories[i]), topic: categories[i].id });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        
+        let final = [];
+        for (let i = 0; i < searchTopicsResp.length; i++) {
+            let s = searchTopicsResp[i];
+            let aList = s.article;
+            if (aList.length > 0) {
+                for (let j = 0; j < aList.length; j++) {
+                    let a = aList[j];
+                    try {
+                        let art = await getContent(a);
+                        if (art.status === 200) {
+                            final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, topic: s.topic, deleted: false, timestamp: admin.firestore.Timestamp.now(), related_articles: [] });
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+
+            }
+        }
+
+        for (let i = 0; i < final.length; i++) {
+            let a = final[i];
+
+            let collection = db.collection('category-articles');
+            let linkQuery = collection.where("link", "==", a.link);
+            let titleQuery = collection.where("title", "==", a.title);
+            let combinedQuery = linkQuery || titleQuery;
+            let docs = await combinedQuery.get();
+
+            if (docs.empty) {
+                await db.collection('category-articles').add(a);
+            } else {
+                console.log("ALREADY ADDED");
+            }
+        }
+        resolve();
+    })
+}
+
 async function doSearch(query) {
     try {
+        console.log(query);
         let response = await fetch(baseURL + "search?query=" + query.topic, options);
         let json = await response.json();
         return json;
@@ -185,6 +276,7 @@ async function doTrending(json) {
 
 async function start() {
     console.log("RUNNING");
+
     await getSources();
     let response = await fetch(baseURL + "trending", options);
     let json = await response.json();
@@ -198,7 +290,8 @@ async function start() {
     for (let i = 0; i < topics.length; i++) {
         await doFeed(topics[i])
     }
-
+    
+    await doCategories(categories);
 
 
     return
