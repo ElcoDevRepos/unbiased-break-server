@@ -159,6 +159,9 @@ async function doFeed(searchTopics, flag) {
 }
 
 async function doCategories(categories) {
+
+    console.log("Running doCategories()...");
+
     return new Promise(async (resolve, reject) => {
 
         let searchTopicsResp = [];
@@ -200,6 +203,7 @@ async function doCategories(categories) {
             let docs = await combinedQuery.get();
 
             if (docs.empty) {
+                console.log("Adding category article!");
                 await db.collection('category-articles').add(a);
             } else {
                 console.log("ALREADY ADDED");
@@ -278,6 +282,8 @@ async function start() {
     console.log("RUNNING");
 
     await getSources();
+    await doCategories(categories);
+
     let response = await fetch(baseURL + "trending", options);
     let json = await response.json();
     await doTrending(json);
@@ -290,8 +296,6 @@ async function start() {
     for (let i = 0; i < topics.length; i++) {
         await doFeed(topics[i])
     }
-    
-    await doCategories(categories);
 
 
     return
