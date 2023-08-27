@@ -23,8 +23,8 @@ const options = {
 async function getRelatedArticles () {
     console.log("RUNNING...");
 
-    const timestampFrame = new Date(Date.now() - 6 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
-    const minimumSimilarity = 0.5;                                       //Minimum value of similarity to determine if two articles are similar
+    const timestampFrame = new Date(Date.now() - 24 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
+    const minimumSimilarity = 0.35;                                       //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
     const queryLeftArticles = await db.collection("left-articles").where("timestamp", ">=", timestampFrame).get();
