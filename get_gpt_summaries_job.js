@@ -6,7 +6,7 @@ var serviceAccount = require("./serviceAccountKey.json");
 const openai = require('openai'); 
 
 const api = new openai.OpenAI({
-    apiKey: "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"
+    apiKey: //this is where key goes
 });
 
 const PORT = process.env.PORT || 8081
