@@ -17,29 +17,36 @@ admin.initializeApp({
 const db = admin.firestore();
 
 async function getGPTSummaries() {
-    console.log("RUNNING...");
+    console.log("RUNNING GPT SUMMARIES...");
 
     const timestampFrame = new Date(Date.now() - 24 * 60 * 60 * 1000); //Timestamp for the timeframe of reads
 
     const queryTrendingArticles = await db.collection("trending-articles").where("timestamp", ">=", timestampFrame).get();
 
+    // Local array to save the summaries
+    let summariesArray = [];
+
     const promises = queryTrendingArticles.docs.map(async (doc) => {
         let txt = doc.data().textBody; //Grabs reference for the document text body
+        let timestamp = doc.data().date; //Grabs reference for the document timestamp
+        let source = doc.data().siteName; //Grabs reference for the document timestamp
+        let title = doc.data().title; //Grabs reference for the document timestamp
         txt = removeDoubleSpaces(txt);
 
         try {
             const chatCompletion = await api.chat.completions.create({
                 model: "gpt-3.5-turbo",
-                messages: [{"role": "user", "content": generatePromt(txt)}],
+                messages: [{"role": "user", "content": generatePrompt(txt)}],
             });
 
             const response = chatCompletion.choices[0].message.content;
-            console.log(response);
 
-            // Save the summary to firebase firestore
-            return db.collection('gpt-summaries').add({
+            // Save the summary to the local array instead of firestore directly
+            summariesArray.push({
                 summary: response,
-                timestamp: admin.firestore.FieldValue.serverTimestamp()
+                timestamp: timestamp,
+                source: source,
+                title: title
             });
 
         } catch (err) {
@@ -48,9 +55,21 @@ async function getGPTSummaries() {
     });
 
     await Promise.all(promises);
+
+    // Save the local array of summaries to one Firestore document
+    try {
+        await db.collection('gpt-summaries').add({
+            summaries: summariesArray,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+        console.log("Error saving summaries to Firestore:", error);
+    }
+
+    console.log("GPT SUMMARIES COMPLETE!")
 }
 
-function generatePromt(textBody) {
+function generatePrompt(textBody) {
     return `Create a two sentence summary for this news article: ${textBody}`;
 }
 
