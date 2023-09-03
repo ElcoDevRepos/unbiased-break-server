@@ -29,10 +29,12 @@ async function getGPTSummaries() {
     const promises = queryTrendingArticles.docs.map(async (doc) => {
         let txt = doc.data().textBody; //Grabs reference for the document text body
         let timestamp = doc.data().date; //Grabs reference for the document timestamp
-        let source = doc.data().siteName; //Grabs reference for the document timestamp
+        let source = doc.data().siteName; //Grabs reference for the document source
         let title = doc.data().title; //Grabs reference for the document timestamp
+        let link = doc.data().link;
+        let image = null;
+        if(doc.data().image != null) image = doc.data().image; //Grabs reference for the document image if there is one
         txt = removeDoubleSpaces(txt);
-
         try {
             const chatCompletion = await api.chat.completions.create({
                 model: "gpt-3.5-turbo",
@@ -46,7 +48,9 @@ async function getGPTSummaries() {
                 summary: response,
                 timestamp: timestamp,
                 source: source,
-                title: title
+                title: title,
+                image: image,
+                link: link
             });
 
         } catch (err) {
