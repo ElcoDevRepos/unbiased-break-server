@@ -30,8 +30,9 @@ async function getGPTSummaries() {
         let txt = doc.data().textBody; //Grabs reference for the document text body
         let timestamp = doc.data().date; //Grabs reference for the document timestamp
         let source = doc.data().siteName; //Grabs reference for the document source
-        let title = doc.data().title; //Grabs reference for the document timestamp
-        let link = doc.data().link;
+        let title = doc.data().title; //Grabs reference for the document title
+        let link = doc.data().link; //Grabs reference for the document link
+        let id = doc.data().id; //Grabs reference for the document id
         let image = null;
         if(doc.data().image != null) image = doc.data().image; //Grabs reference for the document image if there is one
         txt = removeDoubleSpaces(txt);
@@ -50,7 +51,8 @@ async function getGPTSummaries() {
                 source: source,
                 title: title,
                 image: image,
-                link: link
+                link: link,
+                id: id
             });
 
         } catch (err) {
