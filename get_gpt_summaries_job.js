@@ -36,27 +36,31 @@ async function getGPTSummaries() {
         let image = null;
         if(doc.data().image != null) image = doc.data().image; //Grabs reference for the document image if there is one
         txt = removeDoubleSpaces(txt);
-        try {
-            const chatCompletion = await api.chat.completions.create({
-                model: "gpt-3.5-turbo",
-                messages: [{"role": "user", "content": generatePrompt(txt)}],
-            });
 
-            const response = chatCompletion.choices[0].message.content;
+        //Prevent Washington Post articles from summary
+        if(source != 'The Washington Post') {
+            try {
+                const chatCompletion = await api.chat.completions.create({
+                    model: "gpt-3.5-turbo",
+                    messages: [{"role": "user", "content": generatePrompt(txt)}],
+                });
 
-            // Save the summary to the local array instead of firestore directly
-            summariesArray.push({
-                summary: response,
-                timestamp: timestamp,
-                source: source,
-                title: title,
-                image: image,
-                link: link,
-                id: id
-            });
+                const response = chatCompletion.choices[0].message.content;
 
-        } catch (err) {
-            console.log(err);
+                // Save the summary to the local array instead of firestore directly
+                summariesArray.push({
+                    summary: response,
+                    timestamp: timestamp,
+                    source: source,
+                    title: title,
+                    image: image,
+                    link: link,
+                    id: id
+                });
+
+            } catch (err) {
+                console.log(err);
+            }
         }
     });
 
