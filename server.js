@@ -204,7 +204,27 @@ async function doCategories(categories) {
 
             if (docs.empty) {
                 console.log("Adding category article!");
-                await db.collection('category-articles').add(a);
+
+                //  This is a check that will be performed for the "world" category
+                //  to prevent sport articles from populating
+                //  (More checks can be added later if problem sustain)
+                let skip = false;
+                if(a.topic == 'world') {
+                    if(a.title.toLowerCase().includes("football") || 
+                       a.title.toLowerCase().includes("cup") || 
+                       a.title.toLowerCase().includes("cricket") || 
+                       a.title.toLowerCase().includes("fifa") || 
+                       a.title.toLowerCase().includes("series") || 
+                       a.title.toLowerCase().includes("finals")) {
+                        skip = true;
+                    }
+                }
+
+                if(!skip)
+                    await db.collection('category-articles').add(a);
+                else
+                    console.log('This world article has been blocked: ', a.title);
+
             } else {
                 console.log("ALREADY ADDED");
             }
