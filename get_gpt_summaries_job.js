@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const fetch = require("node-fetch");
 var cron = require("node-cron");
+const stringSimilarity = require('string-similarity');
 var serviceAccount = require("./serviceAccountKey.json");
 require("dotenv").config();
 
@@ -25,11 +26,15 @@ async function getGPTSummaries() {
     .collection("trending-articles")
     .where("timestamp", ">=", timestampFrame)
     .get();
+  
+  // Run all trending articles through findPriorityArticles() to remove multiple
+  // articles of same topic.
+  const prioritizedArticles = findPriorityArticles(queryTrendingArticles);
 
   // Local array to save the summaries
   let summariesArray = [];
 
-  const promises = queryTrendingArticles.docs.map(async (doc) => {
+  const promises = prioritizedArticles.docs.map(async (doc) => {
     let txt = doc.data().textBody; //Grabs reference for the document text body
     let timestamp = doc.data().date; //Grabs reference for the document timestamp
     let source = doc.data().siteName; //Grabs reference for the document source
@@ -85,6 +90,53 @@ async function getGPTSummaries() {
   }
 
   console.log("GPT SUMMARIES COMPLETE!");
+}
+
+// Prioritize articles by removing articles with same topic and only push
+// the article with an image attached.
+function findPriorityArticles(articles) {
+
+  let processedIndices = new Set();
+  let uniqueArticlesMap = {};
+
+  articles.docs.forEach((doc, index) => {
+    if (processedIndices.has(index)) return; // Skip if already processed
+
+    const articleTitle = doc.data().title;
+    let hasImage = doc.data().image != null;
+    let selectedArticle = doc;
+
+    articles.docs.forEach((d, i) => {
+      if (index === i) return; // Skip the same article
+
+      const similarityScore = twoStringSimilarity(articleTitle, d.data().title);
+      if (similarityScore > 0.42 && similarityScore != 1) {
+        // Similarity found!
+        processedIndices.add(i); // Mark as processed
+        let comparisonArticleHasImage = d.data().image != null;
+
+        if (comparisonArticleHasImage && !hasImage) {
+          // Prefer the article with an image
+          selectedArticle = d;
+          hasImage = true; // Update the flag as we now have an image
+        }
+      }
+    });
+
+    // Store the preferred article in the uniqueArticlesMap
+    uniqueArticlesMap[articleTitle] = selectedArticle;
+  });
+
+  // Convert the map to an array of unique articles, preferring those with images
+  let uniqueArticles = Object.values(uniqueArticlesMap);
+  return uniqueArticles;
+}
+
+// Two string similarity check using "string-similarity"
+// Returns score between 0 and 1 to determine similarity
+function twoStringSimilarity(text1, text2) {
+  const similarity = stringSimilarity.compareTwoStrings(text1, text2);
+  return similarity;
 }
 
 function generatePrompt(textBody) {
