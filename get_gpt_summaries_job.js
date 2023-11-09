@@ -34,7 +34,7 @@ async function getGPTSummaries() {
   // Local array to save the summaries
   let summariesArray = [];
 
-  const promises = prioritizedArticles.docs.map(async (doc) => {
+  const promises = prioritizedArticles.map(async (doc) => {
     let txt = doc.data().textBody; //Grabs reference for the document text body
     let timestamp = doc.data().date; //Grabs reference for the document timestamp
     let source = doc.data().siteName; //Grabs reference for the document source
@@ -110,7 +110,7 @@ function findPriorityArticles(articles) {
       if (index === i) return; // Skip the same article
 
       const similarityScore = twoStringSimilarity(articleTitle, d.data().title);
-      if (similarityScore > 0.42 && similarityScore != 1) {
+      if (similarityScore > 0.4 && similarityScore != 1) {
         // Similarity found!
         processedIndices.add(i); // Mark as processed
         let comparisonArticleHasImage = d.data().image != null;
