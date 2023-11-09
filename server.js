@@ -50,6 +50,14 @@ let categories = [
     {
         topic: 'Sports',
         id: 'sports'
+    },
+    {
+        topic: 'Israel Conflict',
+        id: 'israel-conflict'
+    },
+    {
+        topic: 'Ukraine Conflict',
+        id: 'ukraine-conflict'
     }
 ];
 
