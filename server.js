@@ -199,6 +199,19 @@ async function doCategories(categories) {
                 console.log(error);
             }
         }
+
+        // Function to check if the date is older than 2 hours
+        function isOld(articleDate) {
+            const articleTime = new Date(articleDate).getTime();
+            const currentTime = new Date().getTime();
+            const hoursDiff = (currentTime - articleTime) / (1000 * 60 * 60);
+            return hoursDiff > 2;
+        }
+
+        // Filter out articles old articles
+        searchTopicsResp.forEach(t => {
+            t.article = t.article.filter(a => !isOld(a.date));
+        });
         
         let final = [];
         for (let i = 0; i < searchTopicsResp.length; i++) {
