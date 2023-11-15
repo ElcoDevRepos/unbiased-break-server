@@ -106,6 +106,7 @@ async function getContent(json) {
 async function doFeed(searchTopics, flag) {
     return new Promise(async (resolve, reject) => {
         let searches = [];
+        console.log('Doing feed searches for: ', searchTopics.topic);
 
         sources.forEach((s) => {
             let str = s.split('.')[0];
@@ -113,6 +114,7 @@ async function doFeed(searchTopics, flag) {
         });
 
         let searchTopicsResp = [];
+        console.time('search');
         for (let i = 0; i < searches.length; i++) {
             try {
                 searchTopicsResp.push({ article: await doSearch(searches[i]), topic: searches[i].id });
@@ -120,7 +122,23 @@ async function doFeed(searchTopics, flag) {
                 console.log(error);
             }
         }
-        let promises = [];
+        console.timeEnd('search');
+
+        // Function to check if the date is older than 2 hours
+        function isOld(articleDate) {
+            const articleTime = new Date(articleDate).getTime();
+            const currentTime = new Date().getTime();
+            const hoursDiff = (currentTime - articleTime) / (1000 * 60 * 60);
+            return hoursDiff > 2;
+        }
+
+        // Filter out articles old articles
+        searchTopicsResp.forEach(t => {
+            t.article = t.article.filter(a => !isOld(a.date));
+        });
+
+
+        console.time('getContent');
         let final = [];
         for (let i = 0; i < searchTopicsResp.length; i++) {
             let s = searchTopicsResp[i];
@@ -140,6 +158,7 @@ async function doFeed(searchTopics, flag) {
 
             }
         }
+        console.timeEnd('getContent');
 
         for (let i = 0; i < final.length; i++) {
             let a = final[i];
@@ -155,6 +174,7 @@ async function doFeed(searchTopics, flag) {
                 let docs = await combinedQuery.get();
 
                 if (docs.empty) {
+                    console.log('Adding', a.title);
                     await db.collection(collectionName).add(a);
                 } else {
                     console.log("ALREADY ADDED");
@@ -163,7 +183,6 @@ async function doFeed(searchTopics, flag) {
         }
         resolve();
     })
-
 }
 
 async function doCategories(categories) {
@@ -180,6 +199,19 @@ async function doCategories(categories) {
                 console.log(error);
             }
         }
+
+        // Function to check if the date is older than 2 hours
+        function isOld(articleDate) {
+            const articleTime = new Date(articleDate).getTime();
+            const currentTime = new Date().getTime();
+            const hoursDiff = (currentTime - articleTime) / (1000 * 60 * 60);
+            return hoursDiff > 2;
+        }
+
+        // Filter out articles old articles
+        searchTopicsResp.forEach(t => {
+            t.article = t.article.filter(a => !isOld(a.date));
+        });
         
         let final = [];
         for (let i = 0; i < searchTopicsResp.length; i++) {
@@ -243,7 +275,6 @@ async function doCategories(categories) {
 
 async function doSearch(query) {
     try {
-        console.log(query);
         let response = await fetch(baseURL + "search?query=" + query.topic, options);
         let json = await response.json();
         return json;
@@ -321,6 +352,7 @@ async function start() {
     topicsSnap.forEach((top) => {
         topics.push({ topic: top.data().name, id: top.data().id });
     });
+    console.log('Running feed...')
     for (let i = 0; i < topics.length; i++) {
         await doFeed(topics[i])
     }
