@@ -222,6 +222,10 @@ async function doCategories(categories) {
                     let a = aList[j];
                     try {
                         let art = await getContent(a);
+
+                        // Check for new news source
+                        if(art.article && art.article.link) newNewsSourceCheck(art.article.link);
+
                         if (art.status === 200) {
                             final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, topic: s.topic, deleted: false, timestamp: admin.firestore.Timestamp.now(), related_articles: [] });
                         }
@@ -271,6 +275,49 @@ async function doCategories(categories) {
         }
         resolve();
     })
+}
+
+// Checks for new news source
+async function newNewsSourceCheck (link) {
+    if(!link) return;
+    const parsedUrl = new URL(link);
+
+    // Extract the hostname (base URL) from the URL object
+    let hostname = parsedUrl.hostname;
+    if (hostname.startsWith("www.")) {
+        hostname = hostname.substring(4);
+    }
+
+    // Check if this source exists in the database
+    let exists = false;
+    sources.forEach(s => {
+        if(s.includes(hostname)) {
+             exists = true;
+        }
+    });
+
+    // Check if the source already exists in the "requested-news-sources" Firebase collection
+    if(!exists) {
+        // Fetch current requested news sources
+        let requestedNewsSources = [];
+        let reqDocs = await db.collection("requested-news-sources").get();
+        reqDocs.forEach(d => {requestedNewsSources.push(d.data().url)});
+        
+        // Check if hostname is in the requested news sources array
+        requestedNewsSources.forEach(r => {
+            if(r.includes(hostname)) exists = true;
+        });
+
+        // Add the new news source to "requested-news-sources"
+        if(!exists) {
+            await db.collection('requested-news-sources').add({
+                timestamp: admin.firestore.Timestamp.now(),
+                url: hostname,
+                user: 'Server'
+            });
+            console.log('Added ', hostname, ' to requested news sources');
+        }
+    }
 }
 
 async function doSearch(query) {
