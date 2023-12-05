@@ -313,7 +313,8 @@ async function newNewsSourceCheck (link) {
             await db.collection('requested-news-sources').add({
                 timestamp: admin.firestore.Timestamp.now(),
                 url: hostname,
-                user: 'Server'
+                user: 'Server',
+                img: `https://${hostname}/favicon.ico`
             });
             console.log('Added ', hostname, ' to requested news sources');
         }
