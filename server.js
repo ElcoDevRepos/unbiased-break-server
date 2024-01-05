@@ -160,6 +160,9 @@ async function doFeed(searchTopics, flag) {
         }
         console.timeEnd('getContent');
 
+        // Run a check for any unwanted urls before pushing article to DB
+        final = checkForUnwantedURLs(final);
+
         for (let i = 0; i < final.length; i++) {
             let a = final[i];
             let collectionName = getProperCollection(a);
@@ -183,6 +186,22 @@ async function doFeed(searchTopics, flag) {
         }
         resolve();
     })
+}
+
+// This will check the final array of articles for links
+// identified to be non-viable for display and will not add them to the DB.
+function checkForUnwantedURLs(articles) {
+    filteredArticles = [];
+    
+    /* This is to filter out any Guardian.com "live" articles since these
+       where identified to be displaying non article html when being pulled. 
+    */ 
+    const guardianLiveRegex = /(?=.*theguardian\.com)(?=.*live)/;
+    filteredArticles = articles.filter(a => !guardianLiveRegex.test(a.link));
+    
+    /* This can be used to add future URL filtering when unwanted URLs are identified */
+
+    return filteredArticles;
 }
 
 async function doCategories(categories) {
