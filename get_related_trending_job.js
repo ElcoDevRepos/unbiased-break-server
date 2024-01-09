@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const fetch = require("node-fetch");
 var serviceAccount = require("./serviceAccountKey.json");
+var natural = require('natural');
 
 const stringSimilarity = require("string-similarity");
 
@@ -23,7 +24,7 @@ async function getRelatedArticles () {
     console.log("RUNNING...");
 
     const timestampFrame = new Date(Date.now() - 48 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
-    const minimumSimilarity = 0.35;                                         //Minimum value of similarity to determine if two articles are similar
+    const minimumSimilarity = 0.42;                                         //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
     const queryTrendingArticles = await db.collection("trending-articles").where("date", ">=", timestampFrame).get();
@@ -42,8 +43,8 @@ async function getRelatedArticles () {
             //Make sure topic matches and it's not deleted
             if(data.id != id && data.deleted == false) {
                 
-                //Run a similarity check on the two bodies of text
-                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
+                //Run a similarity check on the two titles
+                const similarity = natural.DiceCoefficient(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -56,6 +57,9 @@ async function getRelatedArticles () {
 
         //Sort the related articles by similarity in descending order
         relatedArticles.sort((a, b) => b.similarity - a.similarity);
+
+        // Limit to 10 related articles
+        if(relatedArticles.length > 10) relatedArticles.splice(10);
 
         //Create a new array with only the article IDs
         const relatedArticleIds = relatedArticles.map((article) => article.id);

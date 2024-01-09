@@ -2,6 +2,7 @@ const admin = require("firebase-admin");
 const fetch = require("node-fetch");
 var cron = require('node-cron');
 var serviceAccount = require("./serviceAccountKey.json");
+var natural = require('natural');
 
 const stringSimilarity = require("string-similarity");
 
@@ -24,7 +25,7 @@ async function getRelatedArticles () {
     console.log("RUNNING...");
 
     const timestampFrame = new Date(Date.now() - 24 * 60 * 60 * 1000);     //Timestamp for the timeframe of reads
-    const minimumSimilarity = 0.35;                                       //Minimum value of similarity to determine if two articles are similar
+    const minimumSimilarity = 0.42;                                       //Minimum value of similarity to determine if two articles are similar
 
     //Get a query reference snapshot from the last 24h for left, middle and right articles
     const queryLeftArticles = await db.collection("left-articles").where("timestamp", ">=", timestampFrame).get();
@@ -46,7 +47,7 @@ async function getRelatedArticles () {
             if(data.deleted == false) {
                 
                 //Run a similarity check on the two titles
-                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
+                const similarity = natural.DiceCoefficient(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -65,7 +66,7 @@ async function getRelatedArticles () {
            if(data.deleted == false) {
                 
                 //Run a similarity check on the two titles
-                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
+                const similarity = natural.DiceCoefficient(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -78,6 +79,9 @@ async function getRelatedArticles () {
 
         //Sort the related articles by similarity in descending order
         relatedArticles.sort((a, b) => b.similarity - a.similarity);
+
+        // Limit to 10 related articles
+        if(relatedArticles.length > 10) relatedArticles.splice(10);
 
         //Create a new array with only the article IDs
         const relatedArticleIds = relatedArticles.map((article) => article.id);
@@ -105,7 +109,7 @@ async function getRelatedArticles () {
             if(data.deleted == false) {
                 
                 //Run a similarity check on the two titles
-                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
+                const similarity = natural.DiceCoefficient(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -124,7 +128,7 @@ async function getRelatedArticles () {
             if(data.deleted == false) {
           
               //Run a similarity check on the two titles
-              const similarity = stringSimilarity.compareTwoStrings(title, data.title);
+              const similarity = natural.DiceCoefficient(title, data.title);
           
               //Determine if the similarity is above the minimum
               if(similarity >= minimumSimilarity) {
@@ -137,6 +141,9 @@ async function getRelatedArticles () {
           
         //Sort the related articles by similarity in descending order
         relatedArticles.sort((a, b) => b.similarity - a.similarity);
+
+        // Limit to 10 related articles
+        if(relatedArticles.length > 10) relatedArticles.splice(10);
 
         //Create a new array with only the article IDs
         const relatedArticleIds = relatedArticles.map((article) => article.id);
@@ -164,7 +171,7 @@ async function getRelatedArticles () {
             if(data.deleted == false) {
                 
                 //Run a similarity check on the two titles
-                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
+                const similarity = natural.DiceCoefficient(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -183,7 +190,7 @@ async function getRelatedArticles () {
             if(data.deleted == false) {
                 
                 //Run a similarity check on the two titles
-                const similarity = stringSimilarity.compareTwoStrings(title, data.title);
+                const similarity = natural.DiceCoefficient(title, data.title);
 
                 //Determine if the similarity is above the minimum
                 if(similarity >= minimumSimilarity) {
@@ -196,6 +203,9 @@ async function getRelatedArticles () {
 
         //Sort the related articles by similarity in descending order
         relatedArticles.sort((a, b) => b.similarity - a.similarity);
+
+        // Limit to 10 related articles
+        if(relatedArticles.length > 10) relatedArticles.splice(10);
 
         //Create a new array with only the article IDs
         const relatedArticleIds = relatedArticles.map((article) => article.id);
