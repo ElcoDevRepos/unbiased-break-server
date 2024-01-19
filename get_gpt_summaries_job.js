@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const fetch = require("node-fetch");
+const axios = require('axios'); // Added axios module
 var cron = require("node-cron");
 const stringSimilarity = require('string-similarity');
 var serviceAccount = require("./serviceAccountKey.json");
@@ -17,6 +18,28 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
+// Added imageArray
+
+async function generateImage(text) {
+  try {
+    const apiUrl = 'https://api.openai.com/v1/images/generations';
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    const response = await axios.post(apiUrl, { prompt: text }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+    });
+
+    const imageUrl = response.data.data[0].url;
+    return imageUrl;
+  } catch (error) {
+    console.error('Error generating image:', error.message);
+    console.error('Error stack:', error.stack);
+  }
+}
+
 async function getGPTSummaries() {
   console.log("RUNNING GPT SUMMARIES...");
 
@@ -26,9 +49,9 @@ async function getGPTSummaries() {
     .collection("trending-articles")
     .where("timestamp", ">=", timestampFrame)
     .get();
-  
+
   // Run all trending articles through findPriorityArticles() to remove multiple
-  // articles of same topic.
+  // articles of the same topic.
   const prioritizedArticles = findPriorityArticles(queryTrendingArticles);
 
   // Local array to save the summaries
@@ -42,7 +65,7 @@ async function getGPTSummaries() {
     let link = doc.data().link; //Grabs reference for the document link
     let id = doc.data().id; //Grabs reference for the document id
     let image = null;
-    if (doc.data().image != null) image = doc.data().image; //Grabs reference for the document image if there is one
+
     txt = removeDoubleSpaces(txt);
 
     const MAX_TOKENS = 4090;
@@ -61,6 +84,9 @@ async function getGPTSummaries() {
 
         const response = chatCompletion.choices[0].message.content;
 
+        if (doc.data().image != null) image = doc.data().image;
+        else (image = await generateImage(response)); //Grabs reference for the document image if there is one
+
         // Save the summary to the local array instead of firestore directly
         summariesArray.push({
           summary: response,
@@ -71,6 +97,8 @@ async function getGPTSummaries() {
           link: link,
           id: id,
         });
+
+        // Generate image for the current article
       } catch (err) {
         console.log(err);
       }
@@ -92,7 +120,7 @@ async function getGPTSummaries() {
   console.log("GPT SUMMARIES COMPLETE!");
 }
 
-// Prioritize articles by removing articles with same topic and only push
+// Prioritize articles by removing articles with the same topic and only push
 // the article with an image attached.
 function findPriorityArticles(articles) {
 
@@ -133,14 +161,14 @@ function findPriorityArticles(articles) {
 }
 
 // Two string similarity check using "string-similarity"
-// Returns score between 0 and 1 to determine similarity
+// Returns a score between 0 and 1 to determine similarity
 function twoStringSimilarity(text1, text2) {
   const similarity = stringSimilarity.compareTwoStrings(text1, text2);
   return similarity;
 }
 
 function generatePrompt(textBody) {
-  return `Create a two sentence summary for this news article: ${textBody}`;
+  return `Create a two-sentence summary for this news article: ${textBody}`;
 }
 
 function removeDoubleSpaces(inputString) {
@@ -152,3 +180,5 @@ function init() {
 }
 
 init();
+
+module.exports = { getGPTSummaries };
