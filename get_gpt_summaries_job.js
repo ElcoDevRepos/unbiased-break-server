@@ -20,8 +20,13 @@ const db = admin.firestore();
 
 // Added imageArray
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function generateImage(text) {
   try {
+    await sleep(5500);
     const apiUrl = 'https://api.openai.com/v1/images/generations';
     const apiKey = process.env.MY_SECRET_KEY;
 
