@@ -23,7 +23,7 @@ const db = admin.firestore();
 async function generateImage(text) {
   try {
     const apiUrl = 'https://api.openai.com/v1/images/generations';
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.MY_SECRET_KEY;
 
     const response = await axios.post(apiUrl, { prompt: text }, {
       headers: {
