@@ -25,24 +25,38 @@ function sleep(ms) {
 }
 
 async function generateImage(text) {
-  try {
-    await sleep(5500);
-    const apiUrl = 'https://api.openai.com/v1/images/generations';
-    const apiKey = process.env.MY_SECRET_KEY;
-console.log(text);
-    const response = await axios.post(apiUrl, { prompt: text }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-    });
+  // Ensure the text is not too long
+    const maxLength = 4000; // Adjust based on your API's requirements
+    const trimmedText = text.length > maxLength ? text.substring(0, maxLength) : text;
 
-    const imageUrl = response.data.data[0].url;
-    return imageUrl;
-  } catch (error) {
-    console.error('Error generating image:', error.message);
-    console.error('Error stack:', error.stack);
-  }
+    try {
+        // Define the ChatGPT image generation API endpoint and your API key
+        const endpoint = "https://api.openai.com/v1/images/generations";
+        const apiKey = process.env.MY_SECRET_KEY;
+await sleep(5500);
+        // Make the POST request to the API
+        const response = await axios.post(endpoint, {
+            prompt: trimmedText,
+            model: "dall-e-3"
+            // Include any other parameters required by your API
+        }, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Handle the response
+        if (response.data) {
+            // Assuming the image URL is returned in response.data.image_url
+            return response.data[0].url;
+        } else {
+            throw new Error('Unexpected response structure from API');
+        }
+    } catch (error) {
+        console.error('Error generating image from text:', error);
+        throw error;
+    }
 }
 
 async function getGPTSummaries() {
