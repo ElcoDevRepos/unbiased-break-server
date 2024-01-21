@@ -35,16 +35,10 @@ async function generateImage(text) {
         const apiKey = process.env.MY_SECRET_KEY;
 await sleep(5500);
         // Make the POST request to the API
-        const response = await axios.post(endpoint, {
+        const response = await api.images.generate({
             prompt: trimmedText,
             model: "dall-e-3"
-            // Include any other parameters required by your API
-        }, {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            }
-        });
+          });
 
         // Handle the response
         if (response.data) {
