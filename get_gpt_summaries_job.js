@@ -33,7 +33,7 @@ async function generateImage(text) {
         // Define the ChatGPT image generation API endpoint and your API key
         const endpoint = "https://api.openai.com/v1/images/generations";
         const apiKey = process.env.MY_SECRET_KEY;
-await sleep(5500);
+
         // Make the POST request to the API
         const response = await api.images.generate({
             prompt: trimmedText,
@@ -99,7 +99,7 @@ async function getGPTSummaries() {
 
         if (doc.data().image != null) image = doc.data().image;
         else (image = await generateImage(response)); //Grabs reference for the document image if there is one
-
+await sleep(5500);
         // Save the summary to the local array instead of firestore directly
         summariesArray.push({
           summary: response,
