@@ -29,7 +29,7 @@ async function generateImage(text) {
     await sleep(5500);
     const apiUrl = 'https://api.openai.com/v1/images/generations';
     const apiKey = process.env.MY_SECRET_KEY;
-
+console.log(text);
     const response = await axios.post(apiUrl, { prompt: text }, {
       headers: {
         'Content-Type': 'application/json',
