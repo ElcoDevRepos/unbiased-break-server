@@ -28,7 +28,7 @@ async function generateImage(text) {
   // Ensure the text is not too long
     const maxLength = 4000; // Adjust based on your API's requirements
     const trimmedText = text.length > maxLength ? text.substring(0, maxLength) : text;
- await sleep(20000);
+ await sleep(10000);
     try {
         // Define the ChatGPT image generation API endpoint and your API key
         const endpoint = "https://api.openai.com/v1/images/generations";
@@ -98,7 +98,7 @@ async function getGPTSummaries() {
         const response = chatCompletion.choices[0].message.content;
 
         if (doc.data().image != null) image = doc.data().image;
-        else (image = await generateImage(response)); //Grabs reference for the document image if there is one
+        else {await sleep(10000); image = await generateImage(response)}; //Grabs reference for the document image if there is one
 
         // Save the summary to the local array instead of firestore directly
         summariesArray.push({
