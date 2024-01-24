@@ -1,8 +1,5 @@
 const admin = require("firebase-admin");
-const fetch = require("node-fetch");
-const axios = require('axios'); // Added axios module
-var cron = require("node-cron");
-const stringSimilarity = require('string-similarity');
+const stringSimilarity = require("string-similarity");
 var serviceAccount = require("./serviceAccountKey.json");
 require("dotenv").config();
 
@@ -21,36 +18,58 @@ const db = admin.firestore();
 // Added imageArray
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getSafeSummaryForChildren(text) {
+  const prompt = `Please summarize the following text in a child-friendly manner:\n\n${text}`;
+  try {
+    const chatCompletion = await api.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const response = chatCompletion.choices[0].message.content;
+    return response;
+  } catch (error) {
+    console.error("Error generating child-safe summary:", error);
+    throw error;
+  }
 }
 
 async function generateImage(text) {
   // Ensure the text is not too long
-    const maxLength = 4000; // Adjust based on your API's requirements
-    const trimmedText = text.length > maxLength ? text.substring(0, maxLength) : text;
- await sleep(10000);
-    try {
-        // Define the ChatGPT image generation API endpoint and your API key
-        const endpoint = "https://api.openai.com/v1/images/generations";
-        const apiKey = process.env.MY_SECRET_KEY;
+  const maxLength = 4000; // Adjust based on your API's requirements
+  const trimmedText =
+    text.length > maxLength ? text.substring(0, maxLength) : text;
+  try {
+    console.log("REQUESTING IMAGE");
+    await sleep(60000);
+    console.log("Done Sleeping");
+    // Make the POST request to the API
+    const response = await api.images.generate({
+      prompt: trimmedText,
+      model: "dall-e-3",
+    });
 
-        // Make the POST request to the API
-        const response = await api.images.generate({
-            prompt: trimmedText,
-            model: "dall-e-3"
-          });
-
-        // Handle the response
-        if (response.data) {
-            // Assuming the image URL is returned in response.data.image_url
-            return response.data[0].url;
-        } else {
-            throw new Error('Unexpected response structure from API');
-        }
-    } catch (error) {
-        console.error('Error generating image from text:', error);
-        throw error;
+    // Handle the response
+    if (response.data) {
+      // Assuming the image URL is returned in response.data.image_url
+      return response.data[0].url;
+    } else {
+      throw new Error("Unexpected response structure from API");
     }
+  } catch (error) {
+    if (error.error.code == "rate_limit_exceeded") {
+      return await generateImage(text);
+    } else if (error.error.code == "content_policy_violation") {
+      const kidSafeText = await getSafeSummaryForChildren(trimmedText);
+      return await generateImage(kidSafeText);
+    } else {
+      console.error("Error generating image from text:", error);
+      throw error;
+    }
+  }
 }
 
 async function getGPTSummaries() {
@@ -98,7 +117,9 @@ async function getGPTSummaries() {
         const response = chatCompletion.choices[0].message.content;
 
         if (doc.data().image != null) image = doc.data().image;
-        else {await sleep(10000); image = await generateImage(response)}; //Grabs reference for the document image if there is one
+        else {
+          image = await generateImage(response);
+        } //Grabs reference for the document image if there is one
 
         // Save the summary to the local array instead of firestore directly
         summariesArray.push({
@@ -136,7 +157,6 @@ async function getGPTSummaries() {
 // Prioritize articles by removing articles with the same topic and only push
 // the article with an image attached.
 function findPriorityArticles(articles) {
-
   let processedIndices = new Set();
   let uniqueArticlesMap = {};
 
