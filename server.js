@@ -243,7 +243,7 @@ async function doCategories(categories) {
                         let art = await getContent(a);
 
                         // Check for new news source
-                        if(art.article && art.article.link) newNewsSourceCheck(art.article.link);
+                        //if(art.article && art.article.link) newNewsSourceCheck(art.article.link);
 
                         if (art.status === 200) {
                             final.push({ ...art.article, date: new Date(a.date), rating: 0, hearts: 0, topic: s.topic, deleted: false, timestamp: admin.firestore.Timestamp.now(), related_articles: [] });
