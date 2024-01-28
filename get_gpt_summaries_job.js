@@ -116,10 +116,20 @@ async function getGPTSummaries() {
 
         const response = chatCompletion.choices[0].message.content;
 
-        if (doc.data().image != null) image = doc.data().image;
+        if (doc.data().image != null) {
+          // Check for flagged images that are not to be displayed
+          if(isImageFlagged(doc.data().image)) {
+            // Generate AI image
+            image = await generateImage(response);
+          }
+          else {
+            image = doc.data().image;
+          }
+        }
         else {
+          // Grabs reference for the document image if there is one
           image = await generateImage(response);
-        } //Grabs reference for the document image if there is one
+        }
 
         // Save the summary to the local array instead of firestore directly
         summariesArray.push({
@@ -206,6 +216,17 @@ function generatePrompt(textBody) {
 
 function removeDoubleSpaces(inputString) {
   return inputString.replace(/\s{2,}/g, " ");
+}
+
+// Returns true if image is flagged (should not display)
+function isImageFlagged(imageUrl) {
+  const flaggedImageUrlList = [
+    'https://www.bbc.com/bbcx/grey-placeholder.png', 
+    'https://www.businessinsider.com/public/assets/subscription/marketing/banner-overlay/top-left.svg',
+  ]
+
+  if(flaggedImageUrlList.includes(imageUrl)) return true;
+  else return false;
 }
 
 function init() {
