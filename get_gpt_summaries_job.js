@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const stringSimilarity = require("string-similarity");
+const fetch = require("node-fetch");
 var serviceAccount = require("./serviceAccountKey.json");
 require("dotenv").config();
 
@@ -12,8 +13,10 @@ const api = new openai.OpenAI({
 const PORT = process.env.PORT || 8081;
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
+  storageBucket: 'gs://voter-certified.appspot.com'
 });
 const db = admin.firestore();
+const bucket = admin.storage().bucket(); // For Firebase cloud storage
 
 // Added imageArray
 
@@ -37,15 +40,13 @@ async function getSafeSummaryForChildren(text) {
   }
 }
 
-async function generateImage(text) {
+async function generateImage(text, articleId) {
   // Ensure the text is not too long
   const maxLength = 4000; // Adjust based on your API's requirements
   const trimmedText =
     text.length > maxLength ? text.substring(0, maxLength) : text;
   try {
     console.log("REQUESTING IMAGE");
-    await sleep(60000);
-    console.log("Done Sleeping");
     // Make the POST request to the API
     const response = await api.images.generate({
       prompt: trimmedText,
@@ -54,22 +55,51 @@ async function generateImage(text) {
 
     // Handle the response
     if (response.data) {
-      // Assuming the image URL is returned in response.data.image_url
-      return response.data[0].url;
+      // Send image response to upload it to the Firebase storage and return its public storage url
+      const uploadURL = await uploadImageToFirebase(response.data[0].url, `gpt-summaries/${articleId}`);
+      return uploadURL;
     } else {
       throw new Error("Unexpected response structure from API");
     }
   } catch (error) {
-    if (error.error.code == "rate_limit_exceeded") {
-      return await generateImage(text);
-    } else if (error.error.code == "content_policy_violation") {
-      const kidSafeText = await getSafeSummaryForChildren(trimmedText);
-      return await generateImage(kidSafeText);
+    if(error.error) {
+      if (error.error.code == "rate_limit_exceeded") {
+        console.log("Exceeded rate limit, going to sleep for 60s...");
+        await sleep(60000);
+        console.log("Awake again!")
+        return await generateImage(text, articleId);
+      } else if (error.error.code == "content_policy_violation") {
+        const kidSafeText = await getSafeSummaryForChildren(trimmedText);
+        console.log("Getting new kids safe image...");
+        return await generateImage(kidSafeText, articleId);
+      }
     } else {
       console.error("Error generating image from text:", error);
       throw error;
     }
   }
+}
+async function downloadImage(url) {
+  console.log('Downloading image from: ', url);
+  const response = await fetch(url);
+  const buffer = await response.buffer();
+  return buffer;
+}
+async function uploadImageToFirebase(url, destinationPath) {
+  const imageBuffer = await downloadImage(url);
+  const file = bucket.file(destinationPath);
+  await file.save(imageBuffer, {
+    metadata: { 
+      contentType: 'image/jpeg',
+      metadata: {
+        uploadedTime: new Date().toISOString()
+      }
+   },
+  });
+  await file.makePublic();
+  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+  console.log(`Uploaded image to ${publicUrl}`);
+  return publicUrl;
 }
 
 async function getGPTSummaries() {
@@ -120,7 +150,7 @@ async function getGPTSummaries() {
           // Check for flagged images that are not to be displayed
           if(isImageFlagged(doc.data().image)) {
             // Generate AI image
-            image = await generateImage(response);
+            image = await generateImage(response, doc.id);
           }
           else {
             image = doc.data().image;
@@ -128,7 +158,7 @@ async function getGPTSummaries() {
         }
         else {
           // Grabs reference for the document image if there is one
-          image = await generateImage(response);
+          image = await generateImage(response, doc.id);
         }
 
         // Save the summary to the local array instead of firestore directly
