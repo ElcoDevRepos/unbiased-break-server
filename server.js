@@ -142,7 +142,7 @@ async function doFeed(searchTopics, flag) {
       // Filter out articles old articles
       searchTopicsResp.forEach((t) => {
         console.log(t);
-        if (t.article) {
+        if (t.article && Array.isArray(t.article)) {
           t.article = t.article.filter((a) => !isOld(a.date));
         } else {
           t.article = [];
@@ -252,8 +252,11 @@ async function doCategories(categories) {
 
     // Filter out articles old articles
     searchTopicsResp.forEach((t) => {
-      console.log(t);
-      t.article = t.article.filter((a) => !isOld(a.date));
+      if (t.article && Array.isArray(t.article)) {
+        t.article = t.article.filter((a) => !isOld(a.date));
+      } else {
+        t.article = [];
+      }
     });
 
     let final = [];
