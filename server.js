@@ -142,7 +142,11 @@ async function doFeed(searchTopics, flag) {
       // Filter out articles old articles
       searchTopicsResp.forEach((t) => {
         console.log(t);
-        t.article = t.article.filter((a) => !isOld(a.date));
+        if (t.article) {
+          t.article = t.article.filter((a) => !isOld(a.date));
+        } else {
+          t.article = [];
+        }
       });
 
       console.time("getContent");
