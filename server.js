@@ -141,6 +141,7 @@ async function doFeed(searchTopics, flag) {
 
       // Filter out articles old articles
       searchTopicsResp.forEach((t) => {
+        console.log(t);
         t.article = t.article.filter((a) => !isOld(a.date));
       });
 
